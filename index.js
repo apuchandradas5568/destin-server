@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 5050;
 const app = express();
 
 const corsOptions = {
-  origin: ["http://localhost:5173"],
+  origin: ["http://localhost:5173", 'https://destin-20e01.firebaseapp.com', 'https://destin-20e01.web.app' ],
   credentials: true
 }
 

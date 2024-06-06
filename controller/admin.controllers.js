@@ -1,10 +1,15 @@
+import { ObjectId } from "mongodb";
 import {
   biodatasCollection,
   paymentsCollection,
   reviewsCollection,
   usersCollection,
 } from "../db/mongoConnect.js";
-import { sendAdminMail, sendPremiumConfirmationMail, sendRemoveAdminMail } from "../nodemailer/nodeMailer.js";
+import {
+  sendAdminMail,
+  sendPremiumConfirmationMail,
+  sendRemoveAdminMail,
+} from "../nodemailer/nodeMailer.js";
 
 const getApprovedListController = async (req, res) => {
   const getApprovedListFromBio = await biodatasCollection
@@ -12,7 +17,6 @@ const getApprovedListController = async (req, res) => {
     .toArray();
 
   res.json(getApprovedListFromBio);
-
 };
 
 const getPendingListController = async (req, res) => {
@@ -20,7 +24,7 @@ const getPendingListController = async (req, res) => {
     .find({ isPremiumPending: true })
     .toArray();
 
-    console.log(getApprovedListController);
+  console.log(getApprovedListController);
 
   res.json(getPendingList);
 };
@@ -33,7 +37,6 @@ const getUsersListController = async (req, res) => {
 const approveUserController = async (req, res) => {
   const body = req.body;
   const { email } = req.user;
-
 };
 
 const cancelPremiumMembershipController = async (req, res) => {
@@ -66,17 +69,18 @@ const deleteUserController = async (req, res) => {
 const makeAdminController = async (req, res) => {
   const { email } = req.params;
 
-
-  await usersCollection.findOneAndUpdate(
-    { email: email },
-    {
-      $set: {
-        isAdmin: true,
-      },
-    }
-  ).then(()=>{
-    sendAdminMail(email)
-  })
+  await usersCollection
+    .findOneAndUpdate(
+      { email: email },
+      {
+        $set: {
+          isAdmin: true,
+        },
+      }
+    )
+    .then(() => {
+      sendAdminMail(email);
+    });
 
   res.json({ message: "User Role Changed." });
 };
@@ -84,17 +88,18 @@ const makeAdminController = async (req, res) => {
 const removeAdminController = async (req, res) => {
   const { email } = req.params;
 
-
-  await usersCollection.findOneAndUpdate(
-    { email: email },
-    {
-      $set: {
-        isAdmin: false,
-      },
-    }
-  ).then(()=>{
-    sendRemoveAdminMail(email)
-  })
+  await usersCollection
+    .findOneAndUpdate(
+      { email: email },
+      {
+        $set: {
+          isAdmin: false,
+        },
+      }
+    )
+    .then(() => {
+      sendRemoveAdminMail(email);
+    });
 
   res.json({ message: "User Role Changed." });
 };
@@ -106,12 +111,14 @@ const makePremiumController = async (req, res) => {
     { $set: { isPremium: true, isPremiumPending: false } }
   );
 
-  await usersCollection.findOneAndUpdate(
-    { email: email },
-    { $set: { isPremium: true, isPremiumPending: false } }
-  ).then(()=>{
-    sendPremiumConfirmationMail(email)
-  })
+  await usersCollection
+    .findOneAndUpdate(
+      { email: email },
+      { $set: { isPremium: true, isPremiumPending: false } }
+    )
+    .then(() => {
+      sendPremiumConfirmationMail(email);
+    });
 
   res.json("User approved successfully");
 };
@@ -126,12 +133,11 @@ const cancelPremiumController = async (req, res) => {
   await usersCollection.findOneAndUpdate(
     { email: email },
     { $set: { isPremium: false, isPremiumPending: false } }
-  )
+  );
   res.json("Removed from Premium");
 };
 
 const adminDashboardDataController = async (req, res) => {
-
   const totalUsers = await usersCollection.find().count();
   const totalPremium = await usersCollection.find({ isPremium: true }).count();
   const totalAdmins = await usersCollection.find({ isAdmin: true }).count();
@@ -178,10 +184,10 @@ const adminDashboardDataController = async (req, res) => {
     ])
     .toArray();
 
-
-
-    const allSuccessStories = await reviewsCollection.find().sort({createdAt: -1}).toArray();
-
+  const allSuccessStories = await reviewsCollection
+    .find()
+    .sort({ createdAt: -1 })
+    .toArray();
 
   res.json({
     totalUsers,
@@ -194,8 +200,14 @@ const adminDashboardDataController = async (req, res) => {
     FamaleBiodatas,
     totalPayments,
     totalPaymentsInEachMonth,
-    allSuccessStories
+    allSuccessStories,
   });
+};
+
+const deleteStoryController = async (req, res) => {
+  const { id } = req.params;
+  const data = await reviewsCollection.findOneAndDelete({ _id: new ObjectId(id) });
+  res.json(data);
 };
 
 export {
@@ -210,4 +222,5 @@ export {
   makePremiumController,
   cancelPremiumController,
   adminDashboardDataController,
+  deleteStoryController,
 };
